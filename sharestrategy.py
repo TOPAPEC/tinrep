@@ -1,5 +1,6 @@
 # This file contains all 3 solutions for task 1 from programming.
 
+# Class that helps us store data about every single state of share price.
 class ShareState:
 
     def __init__(self, row):
@@ -82,7 +83,7 @@ FirstSolution.solve_and_print_solution('new.csv')
 # Also we generate min array for reversed input list.
 # Then we are beginning to iterate through list. Our index - separate point for array.
 # On the left side from it we find left optimal interval (O(1)).
-# The same on the right side (with help of min array for reversed list). 
+# The same on the right side (with help of min array for reversed list).
 # On the left side we are saving most profitable interval.
 # On the right side we are forced to update interval every time separate point changes,
 # because separate point there goes from right to left, but min array is calculated from left to right.
