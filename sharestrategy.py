@@ -1,4 +1,4 @@
-# This file contains all 3 solutions for task 1 from programming.
+# This file contains solutions for task 1.1 and 1.2 from programming.
 
 # Class that helps us store data about every single state of share price.
 class ShareState:
