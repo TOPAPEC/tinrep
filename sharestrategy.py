@@ -83,7 +83,7 @@ FirstSolution.solve_and_print_solution('new.csv')
 # Also we generate min array for reversed input list.
 # Then we are beginning to iterate through list. Our index - separate point for array.
 # On the left side from it we find left optimal interval (O(1)).
-# The same on the right side (with help of min array for reversed list).
+# The same on the right side (with help of max array for reversed list).
 # On the left side we are saving most profitable interval.
 # On the right side we are forced to update interval every time separate point changes,
 # because separate point there goes from right to left, but min array is calculated from left to right.
@@ -91,7 +91,7 @@ class SecondSolution:
     list = []
     reversed_list = []
     min_array = []
-    reversed_min_array = []
+    reversed_max_array = []
 
     # Parses all elements from file_name into list and reversed_list.
     @staticmethod
@@ -118,21 +118,37 @@ class SecondSolution:
                 min_array.append(prev_min)
         return min_array
 
+    # Create array a, where a[i] - element with maximum price in range [0;i].
+    @staticmethod
+    def create_max_array(array):
+        max_array = []
+        for index, state in enumerate(array):
+            if index == 0:
+                max_array.append(state)
+                continue
+            prev_min = max_array[index - 1]
+            if prev_min.price < state.price:
+                max_array.append(state)
+            else:
+                max_array.append(prev_min)
+        return max_array
+
     # Returns ShareState objects that are limits of optimal intervals with exact separate points.
     @staticmethod
     def get_intervals(point_of_separation):
         index_left = point_of_separation
         index_right = len(SecondSolution.reversed_list) - 1 - point_of_separation
         left_min = SecondSolution.min_array[index_left]
-        right_min = SecondSolution.reversed_min_array[index_right]
+        right_min = SecondSolution.reversed_list[index_right]
         left_cur = SecondSolution.list[index_left]
-        right_cur = SecondSolution.reversed_list[index_right]
+        right_cur = SecondSolution.reversed_max_array[index_right]
         return left_min, left_cur, right_min, right_cur
 
     # Just returns total profit from 2 transactions on this intervals.
     @staticmethod
     def get_sum_of_intervals(interval1_start, interval1_end, interval2_start, interval2_end):
         return (interval1_end.price - interval1_start.price) + (interval2_end.price - interval2_start.price)
+
     # Iterates through list and searches for best solution.
     @staticmethod
     def two_transaction_strategy():
@@ -151,12 +167,13 @@ class SecondSolution:
                 best_intervals_sum = current_interval_sum
                 best_intervals_limits = (*max_left_interval_limits, right_min, right_max)
         return best_intervals_limits
+
     # Runs several functions to get solution then prints it in readable form.
     @staticmethod
     def solve_and_print_solution(file_name):
         SecondSolution.parse_file(file_name)
         SecondSolution.min_array = SecondSolution.create_min_array(SecondSolution.list)
-        SecondSolution.reversed_min_array = SecondSolution.create_min_array(SecondSolution.reversed_list)
+        SecondSolution.reversed_max_array = SecondSolution.create_max_array(SecondSolution.reversed_list)
         (left_min, left_max, right_min, right_max) = SecondSolution.two_transaction_strategy()
         print(f'The first time you buy the shares at {left_min.date} {left_min.time} with price {left_min.price},')
         print(f'then you sell them at {left_max.date} {left_max.time} with price {left_max.price}.')
