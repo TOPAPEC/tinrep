@@ -70,9 +70,10 @@ class FirstSolution:
     @staticmethod
     def solve_and_print_solution(file_name):
         (buy_day, sell_day) = FirstSolution.one_transaction_strategy(file_name)
-        print(f'You buy shares at {buy_day.date} {buy_day.time} with price {buy_day.price}')
-        print(f'And sell them at {sell_day.date} {sell_day.time} with price {sell_day.price}')
-        print(f'Your profit will be {sell_day.price - buy_day.price} per share')
+        print('Solution with 1 interval strategy:')
+        print(f'You buy shares at {buy_day.date} {buy_day.time} with price {buy_day.price:.2f}')
+        print(f'And sell them at {sell_day.date} {sell_day.time} with price {sell_day.price:.2f}')
+        print(f'Your profit will be {sell_day.price - buy_day.price:.2f} per share')
 
 
 FirstSolution.solve_and_print_solution('new.csv')
@@ -175,12 +176,13 @@ class SecondSolution:
         SecondSolution.min_array = SecondSolution.create_min_array(SecondSolution.list)
         SecondSolution.reversed_max_array = SecondSolution.create_max_array(SecondSolution.reversed_list)
         (left_min, left_max, right_min, right_max) = SecondSolution.two_transaction_strategy()
-        print(f'The first time you buy the shares at {left_min.date} {left_min.time} with price {left_min.price},')
-        print(f'then you sell them at {left_max.date} {left_max.time} with price {left_max.price}.')
-        print(f'The second time you buy the shares at {right_min.date} {right_min.time} with price {right_min.price},')
-        print(f'then you sell them at {right_max.date} {right_max.time} with price {right_max.price}.')
-        print(f'You get {left_max.price - left_min.price} per share in first transaction and')
-        print(f'you get {right_max.price - right_min.price} per share in second transaction.')
+        print('Solution with 2 intervals strategy:')
+        print(f'The first time you buy the shares at {left_min.date} {left_min.time} with price {left_min.price:.2f},')
+        print(f'then you sell them at {left_max.date} {left_max.time} with price {left_max.price:.2f}.')
+        print(f'The second time you buy the shares at {right_min.date} {right_min.time} with price {right_min.price:.2f},')
+        print(f'then you sell them at {right_max.date} {right_max.time} with price {right_max.price:.2f}.')
+        print(f'You get {left_max.price - left_min.price:.2f} per share in first transaction and')
+        print(f'you get {right_max.price - right_min.price:.2f} per share in second transaction.')
 
 
 SecondSolution.solve_and_print_solution('new.csv')
