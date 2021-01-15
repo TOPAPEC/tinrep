@@ -107,16 +107,21 @@ class Solution3:
             print(f"You have {current_money:.2f}.")
             print(
                 f"You buy {int(current_money / transaction.share_state1.price)}"
-                f" shares for {transaction.share_state1.price:.2f} each.")
-            print(f"You sell them for {transaction.share_state2.price:.2f} each."
+                f" shares on {transaction.share_state1.date}"
+                f" {transaction.share_state1.time} for {transaction.share_state1.price:.2f} each.")
+            profit = int(current_money / transaction.share_state1.price) * transaction.share_state2.price \
+                - int(current_money / transaction.share_state1.price) * transaction.share_state1.price
+            print(f"You sell them for {transaction.share_state2.price:.2f} each on {transaction.share_state1.date}"
+                  f" {transaction.share_state1.time}."
                   f" You get "
-                  f"{(current_money / transaction.share_state1.price) * transaction.share_state2.price:.2f} profit.")
-            current_money = current_money % transaction.share_state1.price + int(
+                  f"{profit:.2f} profit.")
+            current_money = current_money - int(current_money / transaction.share_state1.price) * \
+                transaction.share_state1.price + int(
                 current_money / transaction.share_state1.price) * transaction.share_state2.price
             print(f"Now you have {current_money:.2f}.")
         after_transactions_money = current_money
         print(f"Your total profit is {after_transactions_money - start_money:.2f}.")
-        
+
     # This method executes the whole solution.
     @staticmethod
     def print_solution(filename):
