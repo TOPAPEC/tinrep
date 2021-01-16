@@ -21,6 +21,8 @@ class SudokuGame:
             print('You should enter .plk save file. Try again:')
             file_name = input()
         field = SudokuGame.__parse_game_save_file(file_name)
+        if field is None:
+            return None
         loaded_game = GameState(field)
         return loaded_game
 
@@ -45,6 +47,7 @@ class SudokuGame:
             return field
         else:
             print('Game saves were corrupted.')
+            return None
 
     @staticmethod
     def __check_save_file(splitted_file):
@@ -169,13 +172,15 @@ class GameState:
                 save_file.write(line)
 
     def show_field(self):
-        for line in self.__field:
-            for i,elem in enumerate(line):
-                print(f"{elem}", end='')
-                if (i+1) % 3 == 0:
-                    print("│", end='')
-            print()
+        for j, line in enumerate(self.__field):
+            for i, elem in enumerate(line):
+                print(f"{elem} ", end='')
 
+                if (i + 1) % 3 == 0 and i + 1 != 9:
+                    print("│ ", end='')
+            print()
+            if (j + 1) % 3 == 0 and j + 1 != 9:
+                print("──────┼───────┼──────")
 
     # Let player make another move.
     def make_move(self):
