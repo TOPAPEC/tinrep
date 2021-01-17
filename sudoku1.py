@@ -12,6 +12,7 @@ class SudokuGame:
         filled_cells_number = SudokuGame.__get_new_game_input()
         return GameState(SudokuGame.FieldCreator.create_field(filled_cells_number))
 
+    # Safely loads saved game.
     @staticmethod
     def load_game():
         print("Enter name of save file:")
@@ -31,6 +32,7 @@ class SudokuGame:
         print('Game is successfully loaded.')
         return loaded_game
 
+    # Executes all methods that are necessary to run game.
     @staticmethod
     def run_game():
         current_game = None
@@ -60,14 +62,16 @@ class SudokuGame:
     def __clear_console():
         os.system('cls' if os.name == 'nt' else 'clear')
 
+    # Parses number of filled cells for new game creation.
     @staticmethod
     def __get_new_game_input():
         filled_cells_string = input()
-        while not filled_cells_string.strip().isdigit():
+        while not filled_cells_string.strip().isdigit() or not 0 <= int(filled_cells_string) < 82:
             print('Wrong input. Enter an integer from [0;81]')
             filled_cells_string = input()
         return int(filled_cells_string.strip())
 
+    # Parses save file and restore state of saved game.
     @staticmethod
     def __parse_game_save_file(file_name):
         with codecs.open(file_name, encoding='utf-8') as file:
@@ -75,20 +79,14 @@ class SudokuGame:
         splitted_file = file_content.split('\n')
         if SudokuGame.__check_save_file(splitted_file):
             field = []
-            mutable_matrix = []
             for i in range(1, 10):
                 field.append(splitted_file[i].split(' '))
-            # for i in range(10, len(splitted_file) - 1):
-            #     mutable_matrix.append(list(map(int, splitted_file[i].split(' '))))
-            # for i in range(len(field)):
-            #     for j in range(len(field)):
-            #         if mutable_matrix[i][j] == 1:
-            #             field[i][j] = ord(field[i][j]) - ''
             return field
         else:
             print('Game saves were corrupted.')
             return None
 
+    # Calculates hash for save file and compares it to one in file.
     @staticmethod
     def __check_save_file(splitted_file):
         hsh = ''
@@ -116,6 +114,7 @@ class SudokuGame:
         print('Bold numerals - numerals that you can change with place command.')
         print('You can check, if you won the game, only if there no zeros left.')
 
+    # Parses and executes main menu command, chosen by user.
     @staticmethod
     def handle_main_menu_command():
         commands = ['new game', 'load', 'rules', 'exit']
@@ -135,7 +134,7 @@ class SudokuGame:
 
     # Class that contains all method for field initialisation.
     class FieldCreator:
-
+        # Initialises and creates new board for sudoku.
         @staticmethod
         def create_field(filled_cells_number):
             field = [[] for j in range(9)]
@@ -144,6 +143,7 @@ class SudokuGame:
             field = SudokuGame.FieldCreator.add_zeros(filled_cells_number, field)
             return field
 
+        # Fills the board with numbers.
         @staticmethod
         def add_numbers(field):
             base_line = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
@@ -152,6 +152,7 @@ class SudokuGame:
                     field[i * 3 + j] = SudokuGame.FieldCreator.cyclic_shift_of_array(base_line, i + j * 3)
             return field
 
+        # Replaces random positions on shuffled game board with zeros.
         @staticmethod
         def add_zeros(filled_cells_number, field):
             zero_counter = 0
@@ -166,10 +167,12 @@ class SudokuGame:
         def cyclic_shift_of_array(array, number):
             return array[number:] + array[0:number]
 
+        # Transposes the board (like matrix).
         @staticmethod
         def transpose(field):
             return [[field[j][i] for j in range(len(field))] for i in range(len(field[0]))]
 
+        # Swaps rows within one sudoku board area.
         @staticmethod
         def swap_rows(field):
             area_number = random.randrange(3)
@@ -180,12 +183,14 @@ class SudokuGame:
             (field[first_row], field[second_row]) = (field[second_row], field[first_row])
             return field
 
+        # Swaps columns within one sudoku board area.
         @staticmethod
         def swap_column(field):
             field = SudokuGame.FieldCreator.transpose(field)
             SudokuGame.FieldCreator.swap_rows(field)
             return SudokuGame.FieldCreator.transpose(field)
 
+        # Swaps 3 * 9 areas.
         @staticmethod
         def swap_row_areas(field):
             first_area_number = random.randrange(3)
@@ -197,12 +202,14 @@ class SudokuGame:
                     (field[second_area_number * 3 + i], field[first_area_number * 3 + i])
             return field
 
+        # Swaps 9 * 3 areas.
         @staticmethod
         def swap_column_areas(field):
             field = SudokuGame.FieldCreator.transpose(field)
             SudokuGame.FieldCreator.swap_row_areas(field)
             return SudokuGame.FieldCreator.transpose(field)
 
+        # Shuffles all numbers on the field (while not breaking rules of sudoku).
         @staticmethod
         def shuffle_field(field):
             func_list = ["SudokuGame.FieldCreator.swap_rows(field)",
@@ -216,12 +223,15 @@ class SudokuGame:
             return field
 
 
+# Keeps state of the gaming board, also contains implementation for all ingame commands.
 class GameState:
 
     def __init__(self, field=None):
         self.__field = field
 
     # Saves the game into a file.
+    # It uses simple hashing (concatenating hashes for every line) to verify if game file is correct
+    # at stage of save loading.
     def save_game(self):
         save_name = 'save'
         save_duplicate_counter = 1
@@ -231,14 +241,6 @@ class GameState:
         field_content = []
         for i in range(len(self.__field)):
             field_content.append(str(self.__field[i]).strip('[]').replace(',', '').replace("'", "") + '\n')
-        for line in self.__field:
-            new_line = []
-            for el in line:
-                if ord(el) >= ord('𝟬'):
-                    new_line.append('1')
-                else:
-                    new_line.append('0')
-            field_content.append(str(new_line).strip('[]').replace(',', '').replace("'", "") + '\n')
         with open(save_name + '.plk', 'ab+') as save_file:
             hsh = ''
             for line in field_content:
@@ -246,9 +248,9 @@ class GameState:
             save_file.write((str(hsh) + '\n').encode("utf8"))
             for line in field_content:
                 save_file.write(line.encode("utf8"))
-
         print(f"Game save successfully into the file '{save_name + '.plk'}'.")
 
+    # Prints field beautifully.
     def show_field(self):
         for j, line in enumerate(self.__field):
             for i, elem in enumerate(line):
@@ -277,6 +279,7 @@ class GameState:
             raise Exception("Incorrect move input. 0 <= row, column, digit < 9")
         return packed_row_column_digit
 
+    # Check if move's inputs are correct.
     def __check_move_input(self, packed_row_column_digit):
         (row, column, digit) = packed_row_column_digit
         if ord('0') <= ord(self.__field[row][column]) < ord('9'):
@@ -296,10 +299,11 @@ class GameState:
         print('check -- let you find out if you filled the field correctly.')
         print('exit -- stops current game.')
 
+    # Parses another command and executes it.
     def handle_game_command(self):
         commands = ['place', 'rules', 'save', 'check', 'exit']
         entered_command = input()
-        while entered_command.split()[0] not in commands:
+        while entered_command not in commands:
             print('Invalid command, please try again.')
             entered_command = input()
         if entered_command == commands[0]:
@@ -317,6 +321,7 @@ class GameState:
         elif entered_command == commands[4]:
             return True
 
+    # Checks if player won.
     def check_field(self):
         for i in range(9):
             for j in range(9):
@@ -326,12 +331,20 @@ class GameState:
         check_rows = [[0 for j in range(10)] for i in range(10)]
         check_columns = [[0 for j in range(10)] for i in range(10)]
         check_nums = [0 for i in range(10)]
-
-    def cell_to_digit(self, cell):
-        if ord('𝟬') <= ord(cell) < ord('𝟬') + 9:
-            return ord(cell) - ord('𝟬');
-        elif ord('0') <= ord(cell) < ord('0') + 9:
-            return ord(cell) - ord('0')
+        lost_flag = False
+        for i in range(len(self.__field)):
+            for j in range(len(self.__field)):
+                check_nums[int(self.__field[i][j])] += 1
+                check_rows[i][int(self.__field[i][j])] += 1
+                check_columns[j][int(self.__field[j][i])] += 1
+                if check_rows[i][int(self.__field[i][j])] > 1 or check_rows[j][int(self.__field[j][i])] > 1:
+                    lost_flag = True
+        if check_nums[0] > 0:
+            lost_flag = True
+        if lost_flag:
+            print('Your solution is incorrect, try again.')
+        else:
+            print('Success!1! You won.')
 
 
 SudokuGame.run_game()
