@@ -16,17 +16,49 @@ class SudokuGame:
     def load_game():
         print("Enter name of save file:")
         file_name = input()
-        field = []
+        field = None
         while len(file_name) < 5 or file_name[-4:] != '.plk':
             print('You should enter .plk save file. Try again:')
             file_name = input()
-        field = SudokuGame.__parse_game_save_file(file_name)
+        try:
+            field = SudokuGame.__parse_game_save_file(file_name)
+        except Exception as ex:
+            print("An error occurred while loading save: " + str(ex))
         if field is None:
-            print('Unable to load the game.')
+            print('Unable to load the save.')
             return None
         loaded_game = GameState(field)
         print('Game is successfully loaded.')
         return loaded_game
+
+    @staticmethod
+    def run_game():
+        current_game = None
+        while True:
+            SudokuGame.__clear_console()
+            print()
+            if current_game is None:
+                SudokuGame.show_main_menu()
+                current_game = SudokuGame.handle_main_menu_command()
+            if current_game == -1:
+                break
+            if current_game is not None:
+                while True:
+                    SudokuGame.__clear_console()
+                    print()
+                    current_game.show_field()
+                    current_game.show_help()
+                    game_end_flag = current_game.handle_game_command()
+                    if game_end_flag:
+                        print('Terminating session...')
+                        current_game = None
+                        break
+            input("Press Enter to continue...")
+
+    # Doesn't work in pycharm :(
+    @staticmethod
+    def __clear_console():
+        os.system('cls' if os.name == 'nt' else 'clear')
 
     @staticmethod
     def __get_new_game_input():
@@ -62,19 +94,51 @@ class SudokuGame:
         else:
             return False
 
+    @staticmethod
+    def show_main_menu():
+        print('Welcome to Sudoku game (by Topapec).')
+        print('You can work with program by entering commands.')
+        print('new game -- begin new game.')
+        print('load -- loads a game from the file.')
+        print('rules -- shows you brief rules.')
+        print('exit -- exit from game.')
+
+    @staticmethod
+    def show_rules():
+        print('You can see the rules of Sudoku here: https://en.wikipedia.org/wiki/Sudoku.')
+        print('Bold numerals - numerals that you can change with place command.')
+        print('You can check, if you won the game, only if there no zeros left.')
+
+    @staticmethod
+    def handle_main_menu_command():
+        commands = ['new game', 'load', 'rules', 'exit']
+        entered_command = input()
+        while entered_command not in commands:
+            print('Invalid command, please try again.')
+            entered_command = input()
+        if entered_command == commands[0]:
+            return SudokuGame.start_new_game()
+        elif entered_command == commands[1]:
+            return SudokuGame.load_game()
+        elif entered_command == commands[2]:
+            SudokuGame.show_rules()
+            return None
+        elif entered_command == commands[3]:
+            return -1
+
     # Class that contains all method for field initialisation.
     class FieldCreator:
 
         @staticmethod
         def create_field(filled_cells_number):
             field = [[] for j in range(9)]
-            field = SudokuGame.FieldCreator.add_numbers(filled_cells_number, field)
+            field = SudokuGame.FieldCreator.add_numbers(field)
             field = SudokuGame.FieldCreator.shuffle_field(field)
             field = SudokuGame.FieldCreator.add_zeros(filled_cells_number, field)
             return field
 
         @staticmethod
-        def add_numbers(filled_cells_number, field):
+        def add_numbers(field):
             base_line = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
             for i in range(3):
                 for j in range(3):
@@ -144,19 +208,6 @@ class SudokuGame:
                 field = eval(func_list[func_id])
             return field
 
-        @staticmethod
-        def show_main_menu():
-            print('You can work with program by entering commands.')
-            print('new game -- begin new game.')
-            print('load -- loads a game from the file.')
-            print('rules -- shows you brief rules.')
-
-        @staticmethod
-        def show_rules():
-            print('You can see the rules of Sudoku here: https://en.wikipedia.org/wiki/Sudoku.')
-            print('Bold numerals - numerals that you can change.')
-            print('You can check, if you won the game only if there no zeros left.')
-            
 
 class GameState:
 
@@ -223,11 +274,48 @@ class GameState:
     @staticmethod
     def show_help():
         print('Available commands:')
-        print('place A B D -- places D in the crossing of row A and column B, 0 <= A,B,D < 9')
+        print('place -- allows you to place numeral in the crossing on the board.')
         print('rules -- shows the rules of the game.')
         print('save -- saves the game into file in the game\'s directory and shows the save file\'s name')
-        print('check -- appears only if the whole board is filled with non-zero numbers.'
-              ' Tells if the sudoku is solved correctly.')
+        print('check -- let you find out if you filled the field correctly.')
+        print('exit -- stops current game.')
+
+    def handle_game_command(self):
+        commands = ['place', 'rules', 'save', 'check', 'exit']
+        entered_command = input()
+        while entered_command.split()[0] not in commands:
+            print('Invalid command, please try again.')
+            entered_command = input()
+        if entered_command == commands[0]:
+            self.make_move()
+            return False
+        elif entered_command == commands[1]:
+            SudokuGame.show_rules()
+            return False
+        elif entered_command == commands[2]:
+            self.save_game()
+            return False
+        elif entered_command == commands[3]:
+            self.check_field()
+            return False
+        elif entered_command == commands[4]:
+            return True
+
+    def check_field(self):
+        for i in range(9):
+            for j in range(9):
+                if self.__field[i][j] == '𝟬':
+                    print('Not all cells are filled with non-zero digits, I can\'t perform this.')
+                    return
+        check_rows = [[0 for j in range(10)] for i in range(10)]
+        check_columns = [[0 for j in range(10)] for i in range(10)]
+        check_nums = [0 for i in range(10)]
+
+    def cell_to_digit(self, cell):
+        if ord('𝟬') <= ord(cell) < ord('𝟬') + 9:
+            return ord(cell) - ord('𝟬');
+        elif ord('0') <= ord(cell) < ord('0') + 9:
+            return ord(cell) - ord('0')
 
 
-
+SudokuGame.run_game()
