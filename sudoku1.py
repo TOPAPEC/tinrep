@@ -75,8 +75,15 @@ class SudokuGame:
         splitted_file = file_content.split('\n')
         if SudokuGame.__check_save_file(splitted_file):
             field = []
-            for i in range(1, len(splitted_file) - 1):
-                field.append(list(map(int, splitted_file[i].split(' '))))
+            mutable_matrix = []
+            for i in range(1, 10):
+                field.append(splitted_file[i].split(' '))
+            # for i in range(10, len(splitted_file) - 1):
+            #     mutable_matrix.append(list(map(int, splitted_file[i].split(' '))))
+            # for i in range(len(field)):
+            #     for j in range(len(field)):
+            #         if mutable_matrix[i][j] == 1:
+            #             field[i][j] = ord(field[i][j]) - ''
             return field
         else:
             print('Game saves were corrupted.')
@@ -224,6 +231,14 @@ class GameState:
         field_content = []
         for i in range(len(self.__field)):
             field_content.append(str(self.__field[i]).strip('[]').replace(',', '').replace("'", "") + '\n')
+        for line in self.__field:
+            new_line = []
+            for el in line:
+                if ord(el) >= ord('𝟬'):
+                    new_line.append('1')
+                else:
+                    new_line.append('0')
+            field_content.append(str(new_line).strip('[]').replace(',', '').replace("'", "") + '\n')
         with open(save_name + '.plk', 'ab+') as save_file:
             hsh = ''
             for line in field_content:
@@ -231,6 +246,7 @@ class GameState:
             save_file.write((str(hsh) + '\n').encode("utf8"))
             for line in field_content:
                 save_file.write(line.encode("utf8"))
+
         print(f"Game save successfully into the file '{save_name + '.plk'}'.")
 
     def show_field(self):
