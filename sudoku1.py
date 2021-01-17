@@ -1,3 +1,4 @@
+import codecs
 import random
 import os
 import hashlib
@@ -37,8 +38,9 @@ class SudokuGame:
     @staticmethod
     def __parse_game_save_file(file_name):
         file_content = ''
-        with open(file_name) as file:
+        with codecs.open(file_name, encoding='utf-8') as file:
             file_content = file.read()
+            print(file_content)
         splitted_file = file_content.split('\n')
         if SudokuGame.__check_save_file(splitted_file):
             field = []
@@ -55,12 +57,12 @@ class SudokuGame:
         for i in range(1, len(splitted_file)):
             if len(splitted_file[i].strip()) == 0:
                 continue
-            hsh += str(hashlib.md5(splitted_file[i].rstrip('\r\n').encode()).hexdigest())
+            hsh += str(hashlib.md5(splitted_file[i].strip().encode()).hexdigest())
         print(hsh)
-        print(splitted_file[0].rstrip('\n'))
+        print(splitted_file[0].strip())
         print(len(hsh))
-        print(len(splitted_file[0].rstrip('\n')))
-        if splitted_file[0].rstrip('\n') == hsh:
+        print(len(splitted_file[0].strip()))
+        if splitted_file[0].strip() == hsh:
             return True
         else:
             return False
@@ -78,7 +80,7 @@ class SudokuGame:
 
         @staticmethod
         def add_numbers(filled_cells_number, field):
-            base_line = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+            base_line = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
             for i in range(3):
                 for j in range(3):
                     field[i * 3 + j] = SudokuGame.FieldCreator.cyclic_shift_of_array(base_line, i + j * 3)
@@ -89,9 +91,9 @@ class SudokuGame:
             zero_counter = 0
             while zero_counter < 81 - filled_cells_number:
                 (i, j) = (random.randrange(9), random.randrange(9))
-                if field[i][j] != 0:
+                if field[i][j] != '𝟬':
                     zero_counter += 1
-                    field[i][j] = 0
+                    field[i][j] = '𝟬'
             return field
 
         @staticmethod
@@ -162,14 +164,14 @@ class GameState:
             save_duplicate_counter += 1
         field_content = []
         for i in range(len(self.__field)):
-            field_content.append(str(self.__field[i]).strip('[]').replace(',', '') + '\n')
-        with open(save_name + '.plk', 'a+') as save_file:
+            field_content.append(str(self.__field[i]).strip('[]').replace(',', '').replace("'", "") + '\n')
+        with open(save_name + '.plk', 'ab+') as save_file:
             hsh = ''
             for line in field_content:
                 hsh += str(hashlib.md5(line.rstrip('\r\n').rstrip('\n').encode()).hexdigest())
-            save_file.write(str(hsh) + '\n')
+            save_file.write((str(hsh) + '\n').encode("utf8"))
             for line in field_content:
-                save_file.write(line)
+                save_file.write(line.encode("utf8"))
 
     def show_field(self):
         for j, line in enumerate(self.__field):
@@ -184,7 +186,20 @@ class GameState:
 
     # Let player make another move.
     def make_move(self):
-        return
+        print("Enter 3 number, separated with spaces. Row, column, digit.")
+        inp_string = input()
+        packed_row_column_digit = tuple(map(int, inp_string.split()))
+        if self.check_move_input(packed_row_column_digit):
+            (row, column, digit) = packed_row_column_digit
+            self.__field[row][column] = chr(ord('𝟬') + digit)
+        else:
+            raise Exception("Incorrect move input. You should"
+                            " enter numbers that fit the rules.")
+
+
+    def check_move_input(self, packed_row_column_digit):
+        (row, column, digit) = packed_row_column_digit
+        return 0 <= row < 9 and 0 <= column < 9 and 0 <= digit < 9
 
     # Gets and parses move's command.
     def __parse_move_input(self):
@@ -196,6 +211,7 @@ class GameState:
 
 
 game = SudokuGame.start_new_game()
+game.make_move()
+game.show_field()
 game.save_game()
 game = SudokuGame.load_game()
-game.show_field()
