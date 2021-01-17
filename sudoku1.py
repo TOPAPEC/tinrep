@@ -17,14 +17,15 @@ class SudokuGame:
         print("Enter name of save file:")
         file_name = input()
         field = []
-        print(file_name[-4:])
         while len(file_name) < 5 or file_name[-4:] != '.plk':
             print('You should enter .plk save file. Try again:')
             file_name = input()
         field = SudokuGame.__parse_game_save_file(file_name)
         if field is None:
+            print('Unable to load the game.')
             return None
         loaded_game = GameState(field)
+        print('Game is successfully loaded.')
         return loaded_game
 
     @staticmethod
@@ -37,10 +38,8 @@ class SudokuGame:
 
     @staticmethod
     def __parse_game_save_file(file_name):
-        file_content = ''
         with codecs.open(file_name, encoding='utf-8') as file:
             file_content = file.read()
-            print(file_content)
         splitted_file = file_content.split('\n')
         if SudokuGame.__check_save_file(splitted_file):
             field = []
@@ -58,10 +57,6 @@ class SudokuGame:
             if len(splitted_file[i].strip()) == 0:
                 continue
             hsh += str(hashlib.md5(splitted_file[i].strip().encode()).hexdigest())
-        print(hsh)
-        print(splitted_file[0].strip())
-        print(len(hsh))
-        print(len(splitted_file[0].strip()))
         if splitted_file[0].strip() == hsh:
             return True
         else:
@@ -149,6 +144,19 @@ class SudokuGame:
                 field = eval(func_list[func_id])
             return field
 
+        @staticmethod
+        def show_main_menu():
+            print('You can work with program by entering commands.')
+            print('new game -- begin new game.')
+            print('load -- loads a game from the file.')
+            print('rules -- shows you brief rules.')
+
+        @staticmethod
+        def show_rules():
+            print('You can see the rules of Sudoku here: https://en.wikipedia.org/wiki/Sudoku.')
+            print('Bold numerals - numerals that you can change.')
+            print('You can check, if you won the game only if there no zeros left.')
+            
 
 class GameState:
 
@@ -172,6 +180,7 @@ class GameState:
             save_file.write((str(hsh) + '\n').encode("utf8"))
             for line in field_content:
                 save_file.write(line.encode("utf8"))
+        print(f"Game save successfully into the file '{save_name + '.plk'}'.")
 
     def show_field(self):
         for j, line in enumerate(self.__field):
@@ -186,32 +195,39 @@ class GameState:
 
     # Let player make another move.
     def make_move(self):
-        print("Enter 3 number, separated with spaces. Row, column, digit.")
+        print("Enter 3 number, separated with spaces:\nrow column digit")
         inp_string = input()
-        packed_row_column_digit = tuple(map(int, inp_string.split()))
-        if self.check_move_input(packed_row_column_digit):
-            (row, column, digit) = packed_row_column_digit
-            self.__field[row][column] = chr(ord('𝟬') + digit)
-        else:
-            raise Exception("Incorrect move input. You should"
-                            " enter numbers that fit the rules.")
-
-
-    def check_move_input(self, packed_row_column_digit):
-        (row, column, digit) = packed_row_column_digit
-        return 0 <= row < 9 and 0 <= column < 9 and 0 <= digit < 9
+        try:
+            (row, column, digit) = self.__parse_move_input(inp_string)
+            self.__change_cell_state(row, column, digit)
+        except Exception as ex:
+            print("An error occurred:\n" + str(ex))
 
     # Gets and parses move's command.
-    def __parse_move_input(self):
-        return
+    def __parse_move_input(self, string):
+        packed_row_column_digit = tuple(map(int, string.split()))
+        if not self.__check_move_input(packed_row_column_digit):
+            raise Exception("Incorrect move input. 0 <= row, column, digit < 9")
+        return packed_row_column_digit
+
+    def __check_move_input(self, packed_row_column_digit):
+        (row, column, digit) = packed_row_column_digit
+        if ord('0') <= ord(self.__field[row][column]) < ord('9'):
+            raise Exception('You are trying to change unchangeable digit.')
+        return 0 <= row < 9 and 0 <= column < 9 and 0 <= digit < 9
 
     # Changes cell's state.
-    def __change_cell_state(self, row, column, num):
-        return
+    def __change_cell_state(self, row, column, digit):
+        self.__field[row][column] = chr(ord('𝟬') + digit)
+
+    @staticmethod
+    def show_help():
+        print('Available commands:')
+        print('place A B D -- places D in the crossing of row A and column B, 0 <= A,B,D < 9')
+        print('rules -- shows the rules of the game.')
+        print('save -- saves the game into file in the game\'s directory and shows the save file\'s name')
+        print('check -- appears only if the whole board is filled with non-zero numbers.'
+              ' Tells if the sudoku is solved correctly.')
 
 
-game = SudokuGame.start_new_game()
-game.make_move()
-game.show_field()
-game.save_game()
-game = SudokuGame.load_game()
+
